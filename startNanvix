@@ -1,0 +1,4 @@
+#! /bin/sh
+make nanvix
+make image
+bash tools/run/run.sh

@@ -22,6 +22,7 @@
 #include <nanvix/const.h>
 #include <nanvix/hal.h>
 #include <nanvix/pm.h>
+#include <nanvix/klib.h>
 #include <signal.h>
 
 /**
@@ -100,16 +101,16 @@ PUBLIC void yield(void)
 		 */
 		if (p->counter > next->counter)
 		{
-			next->counter++;
+			if ((p->priority + p->nice) > (next->priority + next->nice)){
+				next->counter++;
+			}
 			next = p;
+		} else {
+			// next a un counter superieur donc on garde next
+			//if ((p->priority + p->nice) < (next->priority + next->nice)){
+				p->counter++; // La priorité de p est superieur alors on incremente le counter de p
+			//}
 		}
-			
-		/*
-		 * Increment waiting
-		 * time of process.
-		 */
-		else
-			p->counter++;
 	}
 	
 	/* Switch to next process. */
