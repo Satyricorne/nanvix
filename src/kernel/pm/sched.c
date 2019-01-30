@@ -94,22 +94,20 @@ PUBLIC void yield(void)
 		if (p->state != PROC_READY)
 			continue;
 		
-		/*
-		 * Process with higher
-		 * waiting time found.
-		 */
-		if (p->counter > next->counter)
+		if (p->counter >= next->counter)
 		{
-			next->counter++;
+			if((p->priority + p->nice) > (next->priority + next->nice))
+			{
+				next->counter++;
+			}
 			next = p;
+		} else 
+		{
+			if((p->priority + p->nice) < (next->priority + next->nice))
+			{
+				p->counter++;
+			}
 		}
-			
-		/*
-		 * Increment waiting
-		 * time of process.
-		 */
-		else
-			p->counter++;
 	}
 	
 	/* Switch to next process. */
