@@ -89,6 +89,7 @@
 	#define PRIO_TTY           0 /**< Waiting for terminal I/O.    */
 	#define PRIO_SIG          20 /**< Waiting for signal.          */
 	#define PRIO_USER         40 /**< User priority.               */
+	#define PRIO_MEAN		 -30
 	/**@}*/
 
 	/**
@@ -272,6 +273,10 @@
 	EXTERN void resume(struct process *);
 	EXTERN void stop(void);
 	
+
+	struct process *foreground ;
+	struct process *background ;
+
 	/* Forward definitions. */
 	EXTERN int shutting_down;
 	EXTERN struct process proctab[PROC_MAX];

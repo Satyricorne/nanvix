@@ -1,4 +1,6 @@
 #! /bin/sh
-make nanvix
+gnome-terminal
+make clean
+make nanvix -j 4
 make image
 bash tools/run/run.sh

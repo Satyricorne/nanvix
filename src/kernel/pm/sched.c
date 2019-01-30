@@ -66,7 +66,7 @@ PUBLIC void resume(struct process *proc)
 PUBLIC void yield(void)
 {
 	struct process *p;    /* Working process.     */
-	struct process *next; /* Next process to run. */
+	struct process *np; /* Next process to run. */
 
 	/* Re-schedule process for execution. */
 	if (curr_proc->state == PROC_RUNNING)
@@ -88,34 +88,31 @@ PUBLIC void yield(void)
 	}
 
 	/* Choose a process to run next. */
-	next = IDLE;
-	for (p = FIRST_PROC; p <= LAST_PROC; p++)
-	{
+	np = IDLE;
+	
 		/* Skip non-ready process. */
-		if (p->state != PROC_READY)
-			continue;
 		
-		/*
-		 * Process with higher
-		 * waiting time found.
-		 */
-		if (p->counter > next->counter)
-		{
-			if ((p->priority + p->nice) > (next->priority + next->nice)){
-				next->counter++;
-			}
-			next = p;
-		} else {
-			// next a un counter superieur donc on garde next
-			//if ((p->priority + p->nice) < (next->priority + next->nice)){
-				p->counter++; // La priorité de p est superieur alors on incremente le counter de p
-			//}
+		
+	struct process *tmp; /* Next process to run. */
+		
+		np = foreground;
+		while (np->state != PROC_READY && np != NULL){
+			tmp = np;
+			np = np->next;
 		}
-	}
+		if (np == NULL)
+		{
+			np = background;
+			while(np->state != PROC_READY && np != NULL)
+				np = np->next;
+			if (np == NULL)
+				kpanic("C'est la panic");
+			else tmp->next = np->next;
+		} else tmp->next = np->next;	
 	
 	/* Switch to next process. */
-	next->priority = PRIO_USER;
-	next->state = PROC_RUNNING;
-	next->counter = PROC_QUANTUM;
-	switch_to(next);
+	np->priority = PRIO_USER;
+	np->state = PROC_RUNNING;
+	np->counter = PROC_QUANTUM;
+	switch_to(np);
 }

@@ -154,6 +154,32 @@ found:
 	proc->alarm = 0;
 	proc->next = NULL;
 	proc->chain = NULL;
+
+	struct process *tmp;
+	if(proc->priority < PRIO_MEAN)
+		if (foreground == NULL)
+			foreground = proc;
+		else {
+			tmp = foreground;
+			while(tmp->next != NULL)
+				tmp = tmp->next;
+			tmp->next = proc;
+		}
+	else {
+		if (background == NULL)
+			background = proc;
+		else {
+			tmp = background;
+			while(tmp->next != NULL)
+				tmp = tmp->next;
+			tmp->next = proc;
+		}
+	}
+
+	
+	
+	
+
 	sched(proc);
 
 	curr_proc->nchildren++;
