@@ -106,7 +106,7 @@ PUBLIC void yield(void)
 			if((p->priority + p->nice) < (next->priority + next->nice))
 			{
 				p->counter++;
-			}
+			} 
 		}
 	}
 	
