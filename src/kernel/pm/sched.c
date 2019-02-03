@@ -96,14 +96,14 @@ PUBLIC void yield(void)
 		
 		if (p->counter >= next->counter)
 		{
-			if((p->priority + p->nice) > (next->priority + next->nice))
+			if(p->priority + p->nice > next->priority + next->nice)
 			{
 				next->counter++;
 			}
 			next = p;
 		} else 
 		{
-			if((p->priority + p->nice) < (next->priority + next->nice))
+			if(p->priority + p->nice < next->priority + next->nice)
 			{
 				p->counter++;
 			} 

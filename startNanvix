@@ -1,0 +1,6 @@
+#! /bin/sh
+gnome-terminal
+make clean
+make nanvix -j 8
+make image
+bash tools/run/run.sh
