@@ -24,6 +24,7 @@
 #include <nanvix/pm.h>
 #include <nanvix/klib.h>
 #include <signal.h>
+int back_counter;
 
 /**
  * @brief Schedules a process to execution.
@@ -95,20 +96,29 @@ PUBLIC void yield(void)
 		
 	struct process *tmp; /* Next process to run. */
 		
-		np = foreground;
-		while (np->state != PROC_READY && np != NULL){
-			tmp = np;
+	np = foreground;
+	while (np->state != PROC_READY && np != NULL){	// On cherche le premier process ready dans foreground
+		tmp = np;
+		np = np->next;
+	}
+	if (np == NULL)	// Il n'y a aucun process ready dans foreground
+	{
+		np = background;
+		while(np->state != PROC_READY && np != NULL) // On cherche un process ready dans background
 			np = np->next;
-		}
-		if (np == NULL)
-		{
-			np = background;
-			while(np->state != PROC_READY && np != NULL)
-				np = np->next;
-			if (np == NULL)
-				kpanic("C'est la panic");
-			else tmp->next = np->next;
-		} else tmp->next = np->next;	
+		tmp->next = np->next;
+	} else {					// On a trouvé un process ready dans foreground
+		tmp->next = np->next;
+		back_counter++;
+	}	
+	if(back_counter>42){		// Le conteur d'anti famine se reveil
+		back_counter = 0;
+		while(np->next != NULL)	// On va chercher le dernier process de foreground
+			np=np->next;
+		np->next = background;	// On met la chaine background au bout du foreground
+		background = NULL;		// On vide la chaine background
+	}
+
 	
 	/* Switch to next process. */
 	np->priority = PRIO_USER;
