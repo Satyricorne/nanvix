@@ -16,15 +16,16 @@
  * You should have received a copy of the GNU General Public License
  * along with Nanvix. If not, see <http://www.gnu.org/licenses/>.
  */
+#define tabSize 100
 
 struct semaphore
 {
 	const int key;
 	int compteur;
-	struct process proc[100];
+	struct process proc[tabSize];
 };
 
-struct semaphore *list_sem;
+struct semaphore list_sem[tabSize];
 
 #ifndef SEM_H_
 #define SEM_H_
