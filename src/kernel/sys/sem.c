@@ -6,9 +6,10 @@ int create(int key, int n) {
 		return(-1);
 	}
 	struct semaphore sem;
-	sem->key = key;
-	sem->compteur = n;
-	sem->proc = NULL;
+	sem.key = key;
+	sem.compteur = n;
+	sem.compteurProcess = 0;
+	sem.proc = NULL;
 
 	list_sem[key] = sem;
 
@@ -16,18 +17,18 @@ int create(int key, int n) {
 }
 
 int up(int key) {
-	if(list_sem[key]->compteur == 0) {
-		list_sem[key]->compteur++;
+	if(list_sem[key].compteur == 0) {
+		list_sem[key].compteur++;
 	} else {
 		wait();
 	}
 }
 
 int down(int key) {
-	if(list_sem[key]->compteur > 0) {
-		list_sem[key]->compteur--;
+	if(list_sem[key].compteur > 0) {
+		list_sem[key].compteur--;
 	} else {
-		list_sem[key]->
+		list_sem[key].proc[list_sem[key].compteurProcess];
 	}
 }
 

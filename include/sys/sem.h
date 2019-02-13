@@ -22,6 +22,7 @@ struct semaphore
 {
 	const int key;
 	int compteur;
+	int compteurProcess;
 	struct process proc[tabSize];
 };
 
