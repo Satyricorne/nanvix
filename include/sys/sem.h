@@ -17,6 +17,15 @@
  * along with Nanvix. If not, see <http://www.gnu.org/licenses/>.
  */
 
+struct semaphore
+{
+	const int key;
+	int compteur;
+	struct process proc[100];
+};
+
+struct semaphore *list_sem;
+
 #ifndef SEM_H_
 #define SEM_H_
 
