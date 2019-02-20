@@ -17,23 +17,14 @@
  * along with Nanvix. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <nanvix/pm.h>
-
-struct listProc
-{
-	struct process proc;
-	listProc * nextProc;
-};
-
 struct semaphore
 {
-	int key;
+	const int key;
 	int compteur;
-	lsitProc * list;
-	semaphore * nextSem;
+	struct process proc[100];
 };
 
-struct semaphore * list_sem;
+struct semaphore *list_sem;
 
 #ifndef SEM_H_
 #define SEM_H_
