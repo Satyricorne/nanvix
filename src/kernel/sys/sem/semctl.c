@@ -1,7 +1,6 @@
 #include "../../../include/sys/sem.h"
 
 int sys_semctl(int semid, int cmd, int val){
-
   if(cmd == GETVAL){
     return list_sem[semid].compteur;
   }else if(cmd == SETVAL){
