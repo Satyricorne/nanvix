@@ -22,6 +22,7 @@ int up(int key) {
 	} else {
 		wait();
 	}
+	return 0;
 }
 
 int down(int key) {
@@ -30,6 +31,7 @@ int down(int key) {
 	} else {
 		list_sem[key].proc[list_sem[key].compteurProcess];
 	}
+	return 0;
 }
 
 int destroy(int key) {
