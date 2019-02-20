@@ -27,7 +27,7 @@ struct listProc
 
 struct semaphore
 {
-
+	int key;
 	int compteur;
 	lsitProc * list;
 	semaphore * nextSem;
