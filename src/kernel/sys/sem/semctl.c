@@ -18,6 +18,8 @@ int sys_semctl(int semid, int cmd, int val){
       }else{
         return -1;
       }
+    }else{
+      return -1;
     }
     sem->list = sem->list_pro->next;
   }
