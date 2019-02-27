@@ -1,33 +1,70 @@
 #include <sys/sem.h>
+#include <stdlib.h>
 
-struct semaphore create(int n) {
-	
-	struct semaphore sem;
-	sem.compteur = n;
-	sem->listProc = NULL;
+int compteurKey = 0;
 
-	return(sem);
+struct semaphore * getSem(int key){
+	struct semaphore * l = list_sem;
+	while (l != NULL){
+		if(l->key == key)
+			return l;
+		else
+			l = l->nextSem;
+	}
+	return NULL;
 }
 
+int create(int n) {
+	
+	struct semaphore * sem = malloc(sizeof(struct semaphore));
+	sem->key = compteurKey++;
+	sem->compteur = n;
+	sem->list = NULL;
+	sem->nextSem = NULL;
+
+	struct semaphore * tmp = list_sem;
+	while(tmp->nextSem != NULL){
+		tmp = tmp->nextSem;
+	}
+	tmp->nextSem = sem;
+	return(0);
+}	
+
 int up(int key) {
-	if(list_sem[key].compteur == 0) {
-		//wait();
+	struct semaphore * sem = getSem(key);
+	if(sem != NULL) {
+		if(sem->compteur == 0){
+			wakeup(&(sem->list->proc));
+			sem->list = sem->list->nextProc;
+		}else{
+			sem->compteur++;
+		}
 	} else {
-		list_sem[key].compteur++;
+		return(-1);
 	}
 	return(0);
 }
 
 int down(int key) {
-	if(list_sem[key].compteur > 0) {
-		list_sem[key].compteur--;
-	} else {
-		//list_sem[key].proc[list_sem[key].compteurProcess];
+	struct semaphore * sem = getSem(key);
+	if(sem != NULL){
+		if(sem->compteur > 0)
+			sem->compteur--;
+		else if(sem->compteur == 0){
+			sleep(&(sem->list->proc),0);
+		}
+		return 0;
+
+	}
+	return -1;
+}
+
+int destroy(int key) {
+
+	struct semaphore * tmp = list_sem;
+	while(tmp->key != key && tmp->nextSem != NULL){
+		tmp = tmp->nextSem;
 	}
 	return(0);
 }
 
-int destroy(int key) {
-	list_sem[key] = NULL;
-	return(0);
-}

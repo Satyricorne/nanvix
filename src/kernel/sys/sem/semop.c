@@ -1,6 +1,6 @@
-#include "sem.h"
+#include <sys/sem.h>
 
-int sys_semop(int semid, int op){
+PUBLIC int sys_semop(int semid, int op){
 
 	if(op<0)
 		return down(semid);

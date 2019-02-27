@@ -1,11 +1,14 @@
-#include <sem.h>
+#include <sys/sem.h>
 
-int sys_semget(unsigned key){
-	if(!(list_sem[key].key == key)){
-		struct semaphore sem;
-		sem.key = key;
-		sem.compteur = 0;
-		list_sem[key] = sem;
-	}
-	return key;
+
+PUBLIC int sys_semget(unsigned int key){
+	semaphore * sem = getSem(key);
+	if(sem == NULL){
+		create((int)key);
+		return key;
+	}else if (sem != NULL){
+		return key;
+	}else{
+		return -1; // Error
+	}	
 }
