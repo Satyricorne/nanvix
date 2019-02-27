@@ -19,21 +19,31 @@
 
 #include <nanvix/pm.h>
 
+typedef struct listProc listProc;
+
 struct listProc
 {
-	struct process proc;
+	struct process * proc;
 	listProc * nextProc;
 };
+
+typedef struct semaphore semaphore;
 
 struct semaphore
 {
 	int key;
 	int compteur;
-	lsitProc * list;
+	listProc * list;
 	semaphore * nextSem;
 };
 
 struct semaphore * list_sem;
+
+struct semaphore * getSem(int);
+int up(int);
+int down(int);
+int create(int);
+int destroy(int);
 
 #ifndef SEM_H_
 #define SEM_H_
