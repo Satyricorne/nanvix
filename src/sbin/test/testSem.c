@@ -238,7 +238,7 @@ int main(int argc, char const *argv[])
 	Consumer cons[nbC];
 	initAllCons(&cons,nbC);
 
-	Randomize();
+	Randomize(&prod,&cons, nbC, nbP, &buffer, ConsTime, ProdTime, mavg );
 
 	int i = 0;
 	done = false;
