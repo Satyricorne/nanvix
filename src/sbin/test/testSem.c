@@ -2,7 +2,11 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <time.h>
+#include <string.h>
+#include <assert.h>
 
+#include "testSem.h"
+#include "ArrayList.h"
 /*
 Pour les sources, se referer à 
 https://guyteub.xyz/lucas/SE-Projet_PC/src/branch/v4/Projet%20Eclipse/src/prodcons/v2
@@ -13,95 +17,86 @@ Aller sur la branche v4, puis dans le dossier v2 (c'est bizarre mais c'est comme
 #define notEmpty 1
 #define mutex 2
 
-// structure du message que l'on envoit
-typedef struct {
-	char msg[];
-}Message;
-
 
 /*###########################################
 ################  PRODUCER  #################
 ###########################################*/
 
-// structure d'un producteur
-typedef struct {
-	// ProdConsBuffer buffer;
-	int tpsProd;
-	int mavg;
-	bool done;
-	Message msg[];
-}Producer;
-
 // on initialise un producteur
-void initProducer(Producer &producer,int mavg,int id){
-	*producer->done = false;
-	*producer->msg = malloc(sizeof(Message)*mavg);
-	*producer->id = id;
+void initProducer(Producer *producer,int mavg,int id){
+	producer->done = false;
+	producer->msg = malloc(sizeof(Message)*mavg);
+	producer->id = id;
 }
 
+/*###########################################
+############# Ici, on veut une liste de pointeur de producer  ###############
+###########################################*/
 // on initialise tous les producteurs
-void initAllProd(Producer &prod[],int mavg,int nbP){
+void initAllProd(Producer *prod,int mavg,int nbP){
 	for (int i = 0; i < nbP; ++i)
 	{
 		initProducer(&prod[i],mavg,i);
 	}
 }
 
+/*###########################################
+############# Ici, on veut un pointeur de producer  ###############
+###########################################*/
 // on commence la production d'un producteur
-void runProducer(Producer &producer,int mavg,ProdConsBuffer &buffer,int tpsProd) {
+void runProducer(Producer *producer,int mavg,ProdConsBuffer *buffer,int tpsProd) {
 
 	for (int i = 0; i < mavg; i++) {
 		/*########################################
 		########## equivalent en C de sleep ??? ########
 		#########################################*/
-		Thread.sleep(tpsProd); 
+		// Thread.sleep(tpsProd); 
 		char str[] = "Producer ";
-		strcat(str,*producer->id);
+		strcat(str,producer->id);
 		strcat(str," , msg N°");
 		strcat(str,i+1);
 
 		Message mymsg = malloc(sizeof(Message));
-		mymsg.msg = str;
-		*producer->msg[i] =mymsg;
-		printf("%s",*producer->msg[i]);
-		put(buffer,*producer->msg[i]);
+		strcpy(mymsg.msg,str);
+		producer->msg[i] = mymsg;
+		printf("%s",producer->msg[i].msg);
+		put(buffer,producer->msg[i]);
 
 	}
-	*producer->done = true;
+	producer->done = true;
 	return;
 }
 
 /*###########################################
 ################  CONSUMER  #################
 ###########################################*/
-typedef struct {
-	// ProdConsBuffer buffer;
-	int tpsCons;
-	int mavg;
-	Message msg[];
-}Consumer;
 
 // on initialise un consumer
-void initConsumer(Consumer &consumer,int Mavg, int id){
-	*consumer->msg = malloc(sizeof(Message)*Mavg);
-	*consumer->id = id;
+void initConsumer(Consumer *consumer,int Mavg, int id){
+	consumer->msg = malloc(sizeof(Message)*Mavg);
+	consumer->id = id;
 }
 
+/*###########################################
+############# Ici, on devrait avoit une liste de pointeur de consumer  ###############
+###########################################*/
 // on initialise tout les consumer
-void initAllCons(Consumer &cons[],int mavg, int nbC){
+void initAllCons(Consumer *cons,int mavg, int nbC){ 
 	for (int i = 0; i < nbC; ++i)
 	{
 		initConsumer(&cons[i],mavg, i);
 	}
 }
-
+/*###########################################
+############# Ici, on veut juste un pointeur sur un consumer  ###############
+###########################################*/
 // on lance la consommation d'un consumer
-void runConsumer(Consumer &consumer,ProdConsBuffer &buffer,int tpsCons, int mavg) {
+void runConsumer(Consumer *consumer,ProdConsBuffer *buffer,int tpsCons, int mavg) {
 	for (int i = 0; i < mavg; i++) { // on va consommer mavg messages
 
-		Thread.sleep(tpsCons); // on attend entre chaque get
-		*consumer->msg[i] = get(buffer);
-		printf("Consumer N°%d -> msg recu : \"%s\"",*consumer->id, *consumer->msg[i]);
+		// Thread.sleep(tpsCons); // on attend entre chaque get
+		consumer->msg[i] = get(buffer);
+		printf("Consumer N°%d -> msg recu : \"%s\"",consumer->id, consumer->msg[i].msg);
 	}
 
 }
@@ -110,36 +105,25 @@ void runConsumer(Consumer &consumer,ProdConsBuffer &buffer,int tpsCons, int mavg
 ############# ProdConsBuffer  ###############
 ###########################################*/
 
-// buffer partagé
-typedef struct {
-	int in;
-	int out;
-	int size;
-	int nbmsgTotal;
-	int nmsg;
-	int nbMessProd;
-	int nbMessCons;
-	bool consNExemplaire;
-	Message tab[];
-}ProdConsBuffer;
+
 
 // on initialise le buffer
-void initProdConsBuffer(ProdConsBuffer &buffer,int size) {
-	*buffer->tab = malloc(sizeof(Message)*size);
-	*buffer->size = size;
-	*buffer->in = 0;
-	*buffer->out = 0;
+void initProdConsBuffer(ProdConsBuffer *buffer,int size) {
+	buffer->tab = malloc(sizeof(Message)*size);
+	buffer->size = size;
+	buffer->in = 0;
+	buffer->out = 0;
 		// Nombre exact de message dans le buffer (prend en compte le N)
-	*buffer->nbmsgTotal = 0;
+	buffer->nbmsgTotal = 0;
 		// Contient le nombre d'exemplaire diff�rents de messages
-	*buffer->nmsg = 0;
-	*buffer->nbMessCons = 0;
-	*buffer->nbMessProd = 0;
-	*buffer->consNExemplaire = true;
+	buffer->nmsg = 0;
+	buffer->nbMessCons = 0;
+	buffer->nbMessProd = 0;
+	buffer->consNExemplaire = true;
 }
 
 // mettre un message dans le buffer
-void put(ProdConsBuffer &buffer, Message m){
+void put(ProdConsBuffer *buffer, Message m){
 		// On ne peut pas put si le buffer est plein
 	semop(notFull,-1);
 
@@ -147,10 +131,10 @@ void put(ProdConsBuffer &buffer, Message m){
 		// seul à executer le code suivant
 	semop(mutex,-1);
 
-	*bufer->tab[*buffer->in] = m;
-	*bufer->in = (*buffer->in + 1) % *buffer->size; // buffer circulaire
-	*bufer->nbmsg++;
-	*bufer->nbMessProd++;
+	buffer->tab[buffer->in] = m;
+	buffer->in = (buffer->in + 1) % buffer->size; // buffer circulaire
+	buffer->nmsg++;
+	buffer->nbMessProd++;
 
 		// On relache la ressource
 	semop(mutex,1);
@@ -159,16 +143,16 @@ void put(ProdConsBuffer &buffer, Message m){
 }
 
 // on prend un message dans le buffer
-Message get(ProdConsBuffer &buffer){
+Message get(ProdConsBuffer *buffer){
 		// On prent la ressource si le semaphore n'est pas vide, car on ne peut pas get
 		// si le buffer est vide
 	semop(notEmpty,-1);
 	semop(mutex,-1);
 
-	Message tempMsg = *bufer->tab[*bufer->out];
-	*bufer->out = (*bufer->out + 1) % *bufer->size; // buffer circulaire
-	*bufer->nbmsg--;
-	*bufer->nbMessCons++;
+	Message tempMsg = buffer->tab[buffer->out];
+	buffer->out = (buffer->out + 1) % buffer->size; // buffer circulaire
+	buffer->nmsg--;
+	buffer->nbMessCons++;
 
 	semop(mutex,1);
 	semop(notFull,1);
@@ -176,29 +160,32 @@ Message get(ProdConsBuffer &buffer){
 }
 
 // on randomise l'execution des consumers et producer
-void Randomize(Producer &prod[],Consumer &cons[], int nbC, int nbP,ProdConsBuffer &buffer, int tpsCons, int tpsProd, int mavg ) {
+void Randomize(Producer *prod,Consumer *cons, int nbC, int nbP,ProdConsBuffer *buffer, int tpsCons, int tpsProd, int mavg ) {
 
 	ArrayList l;
 	init(&l);
-	l = new ArrayList<>();
 
 	for (int i = 0; i < nbP; i++) {
-		add(&l,"prod");
+		add(&l,(Element) {"prod"});
 	}
 	for (int j = 0; j < nbC; j++) {
-		add(&l,"cons");
+		add(&l,(Element) {"cons"});
 	}
 
 	int min = 0;
-	int max = l.size;
+	int max = sizeL(&l);
 	int x;
 	int iProd = 0;
 	int iCons = 0;
 	bool prodDone = false;
 	bool consDone = false;
-	while (!l.isEmpty()) {
+	while (!isEmpty(&l)) {
 		x = (rand()%(max - min+1)) + min;
-		char[] s = l.get(x);
+		Element *e = getE(&l,x);
+		/*###########################################
+############# Probleme de type  ###############
+###########################################*/
+		char s[] = e->data; 
 		if (strcmp(s,"prod") == 0) {
 			if (!prodDone && iProd < nbP) {
 				/*########################################
@@ -219,7 +206,7 @@ void Randomize(Producer &prod[],Consumer &cons[], int nbC, int nbP,ProdConsBuffe
 			}
 
 		}
-		remove(&l,s);
+		removeE(&l,s);
 		max = l.size;
 	}
 }
@@ -246,14 +233,17 @@ int main(int argc, char const *argv[])
 	semctl(mutex,"SETVAL",1);
 
 
-	ProdConsBuffer buffer = malloc(sizeof(ProdConsBuffer));
-	buffer.size = BufSz;
+	ProdConsBuffer *buffer = malloc(sizeof(ProdConsBuffer));
+	buffer->size = BufSz;
 	Producer prod [nbP]; // initialiser chaque case ???
-	initAllProd(&prod,nbP);
+	/*###########################################
+############# Probleme de type de pointeurs  ###############
+###########################################*/
+	initAllProd(&prod,mavg,nbP);
 	Consumer cons[nbC];
-	initAllCons(&cons,nbC);
+	initAllCons(&cons,mavg, nbC);
 
-	Randomize(&prod,&cons, nbC, nbP, &buffer, ConsTime, ProdTime, mavg );
+	Randomize(&prod,&cons, nbC, nbP, buffer, ConsTime, ProdTime, mavg );
 
 	int i = 0;
 	done = false;
@@ -269,18 +259,18 @@ int main(int argc, char const *argv[])
 
 	}
 	
-	while (buffer.nmsg != 0) {
+	while (buffer->nmsg != 0) {
 		// on attend que tout les messages aient été consommé
 	}
 
 	// Arriv� ici, tous les producteurs ont tout produit, et tous les consomamteurs
 	// ont tout consomm� <=> il ne reste rien a faire
 	// on verifie si on a bien produit le nombre de message attendu
-	assert (buffer.NbMessProd == (nbP * mavg));
+	assert (buffer->nbMessProd == (nbP * mavg));
 	// assert(buffer.getNbMessCons() == (nbC*Mavg) );
 	// on verifie que on a consomm� autant que ce qu'on a produit
-	assert (buffer.NbMessProd == buffer.NbMessCons);
+	assert (buffer->nbMessProd == buffer->nbMessCons);
 
-	printf("%d messages ont ete produits, %d messages ont ete consomme\n",buffer.nbMessProd,buffer.nbMessCons);
+	printf("%d messages ont ete produits, %d messages ont ete consomme\n",buffer->nbMessProd,buffer->nbMessCons);
 	exit(0);
 }
