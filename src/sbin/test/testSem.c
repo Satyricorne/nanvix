@@ -1,9 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdbool.h>
-#include <time.h>
 #include <string.h>
 #include <assert.h>
+#include <sys/sem.h>
 
 #include "testSem.h"
 #include "ArrayList.h"
@@ -17,14 +16,34 @@ Aller sur la branche v4, puis dans le dossier v2 (c'est bizarre mais c'est comme
 #define notEmpty 1
 #define mutex 2
 
-
+// Fonction recuperer sur :
+// https://stackoverflow.com/questions/9655202/how-to-convert-integer-to-string-in-c
+char * itos(int i, char b[10]){
+	char const digit[] = "0123456789";
+    char* p = b;
+    if(i<0){
+        *p++ = '-';
+        i *= -1;
+    }
+    int shifter = i;
+    do{
+        ++p;
+        shifter = shifter/10;
+    }while(shifter);
+    *p = '\0';
+    do{
+        *--p = digit[i%10];
+        i = i/10;
+    }while(i);
+    return b;
+}
 /*###########################################
 ################  PRODUCER  #################
 ###########################################*/
 
 // on initialise un producteur
 void initProducer(Producer *producer,int mavg,int id){
-	producer->done = false;
+	producer->done = 0;
 	producer->msg = malloc(sizeof(Message)*mavg);
 	producer->id = id;
 }
@@ -51,10 +70,13 @@ void runProducer(Producer *producer,int mavg,ProdConsBuffer *buffer,int tpsProd)
 		########## equivalent en C de sleep ??? ########
 		#########################################*/
 		// Thread.sleep(tpsProd); 
+
 		char str[] = "Producer ";
-		strcat(str,producer->id);
+		char str2[10];
+		char str3[10];
+		strcat(str, itos(producer->id, str2));
 		strcat(str," , msg N°");
-		strcat(str,i+1);
+		strcat(str,itos(i+1, str3));
 
 		Message mymsg = malloc(sizeof(Message));
 		strcpy(mymsg.msg,str);
@@ -63,7 +85,7 @@ void runProducer(Producer *producer,int mavg,ProdConsBuffer *buffer,int tpsProd)
 		put(buffer,producer->msg[i]);
 
 	}
-	producer->done = true;
+	producer->done = 1;
 	return;
 }
 
@@ -95,6 +117,7 @@ void runConsumer(Consumer *consumer,ProdConsBuffer *buffer,int tpsCons, int mavg
 	for (int i = 0; i < mavg; i++) { // on va consommer mavg messages
 
 		// Thread.sleep(tpsCons); // on attend entre chaque get
+		tpsCons++;
 		consumer->msg[i] = get(buffer);
 		printf("Consumer N°%d -> msg recu : \"%s\"",consumer->id, consumer->msg[i].msg);
 	}
@@ -119,7 +142,7 @@ void initProdConsBuffer(ProdConsBuffer *buffer,int size) {
 	buffer->nmsg = 0;
 	buffer->nbMessCons = 0;
 	buffer->nbMessProd = 0;
-	buffer->consNExemplaire = true;
+	buffer->consNExemplaire = 1;
 }
 
 // mettre un message dans le buffer
@@ -139,7 +162,7 @@ void put(ProdConsBuffer *buffer, Message m){
 		// On relache la ressource
 	semop(mutex,1);
 		// On relache aussi
-	semopt(notEmpty,1);
+	semop(notEmpty,1);
 }
 
 // on prend un message dans le buffer
@@ -177,8 +200,8 @@ void Randomize(Producer *prod,Consumer *cons, int nbC, int nbP,ProdConsBuffer *b
 	int x;
 	int iProd = 0;
 	int iCons = 0;
-	bool prodDone = false;
-	bool consDone = false;
+	_Bool prodDone = 0;
+	_Bool consDone = 0;
 	while (!isEmpty(&l)) {
 		x = (rand()%(max - min+1)) + min;
 		Element *e = getE(&l,x);
@@ -193,7 +216,7 @@ void Randomize(Producer *prod,Consumer *cons, int nbC, int nbP,ProdConsBuffer *b
 				#########################################*/				
 				runProducer(prod[iProd++],buffer, tpsProd,mavg);
 				if (iProd == nbP)
-					prodDone = true;
+					prodDone = 1;
 			}
 		} else if (strcmp(s,"cons") == 0) {
 			if (!consDone && iCons < nbC) {
@@ -202,7 +225,7 @@ void Randomize(Producer *prod,Consumer *cons, int nbC, int nbP,ProdConsBuffer *b
 				#########################################*/
 				runConsumer(cons[iCons++],buffer, tpsCons,mavg);
 				if (iCons == nbC)
-					consDone = true;
+					consDone = 1;
 			}
 
 		}
@@ -220,7 +243,7 @@ int main(int argc, char const *argv[])
 	int BufSz = 3;
 	int ProdTime = 1000;
 	int ConsTime = 1000;
-	bool done;
+	_Bool done;
 	int mavg = 15;
 
 	semget(notFull);
@@ -246,9 +269,9 @@ int main(int argc, char const *argv[])
 	Randomize(&prod,&cons, nbC, nbP, buffer, ConsTime, ProdTime, mavg );
 
 	int i = 0;
-	done = false;
+	done = 0;
 	while (!done) {
-		done = true;
+		done = 1;
 		i = 0;
 		while (i < nbP) {
 			done = done && prod[i].done;

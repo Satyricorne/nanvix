@@ -16,18 +16,18 @@ struct semaphore * getSem(int key){
 
 int create(int n) {
 	
-	struct semaphore * sem = malloc(sizeof(struct semaphore));
-	sem->key = compteurKey++;
-	sem->compteur = n;
-	sem->list = NULL;
-	sem->nextSem = NULL;
+	struct semaphore sem;
+	(&sem)->key = compteurKey++;
+	(&sem)->compteur = n;
+	(&sem)->list = NULL;
+	(&sem)->nextSem = NULL;
 
 	struct semaphore * tmp = list_sem;
 	while(tmp->nextSem != NULL){
 		tmp = tmp->nextSem;
 	}
-	tmp->nextSem = sem;
-	return(0);
+	tmp->nextSem = &sem;
+	return((&sem)->key);
 }	
 
 int up(int key) {
@@ -51,10 +51,13 @@ int down(int key) {
 		if(sem->compteur > 0)
 			sem->compteur--;
 		else if(sem->compteur == 0){
+			/*struct listProc * tmp = sem->list;
+			while((tmp->nextProc) != NULL)
+				tmp = tmp->nextProc;
+			tmp->nextProc->proc = &p;*/
 			sleep(&(sem->list->proc),0);
 		}
 		return 0;
-
 	}
 	return -1;
 }
@@ -62,8 +65,18 @@ int down(int key) {
 int destroy(int key) {
 
 	struct semaphore * tmp = list_sem;
-	while(tmp->key != key && tmp->nextSem != NULL){
+	struct semaphore * oldTmp = NULL;
+
+	while(tmp->key != key || tmp->nextSem != NULL){
+		oldTmp = tmp;
 		tmp = tmp->nextSem;
+	}
+	if (tmp->nextSem == NULL) {			// Semaphore introuvable
+		return(-1);
+	} else if (oldTmp == NULL) {		// Semaphore en debut de chaine
+		list_sem = tmp->nextSem;
+	} else {							// Semaphore en milieu/fin de chaine
+		oldTmp->nextSem = tmp->nextSem;
 	}
 	return(0);
 }

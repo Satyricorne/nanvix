@@ -13,7 +13,7 @@ typedef struct {
 	int nmsg;
 	int nbMessProd;
 	int nbMessCons;
-	bool consNExemplaire;
+	_Bool consNExemplaire; // _Boolean
 	Message tab[];
 }ProdConsBuffer;
 
@@ -26,7 +26,7 @@ typedef struct {
 	// ProdConsBuffer buffer;
 	int tpsProd;
 	int mavg;
-	bool done;
+	_Bool done; // _Boolean
 	int id;
 	Message msg[];
 }Producer;
