@@ -270,7 +270,11 @@ int main(int argc, char const *argv[])
 	// assert(buffer.getNbMessCons() == (nbC*Mavg) );
 	// on verifie que on a consomm� autant que ce qu'on a produit
 	assert (buffer->nbMessProd == buffer->nbMessCons);
-
+	// destruction des semaphores
+	semctl(notFull,"IPC_RMID",0);
+	semctl(notEmpty,"IPC_RMID",0);
+	semctl(mutex,"IPC_RMID",0);
+	
 	printf("%d messages ont ete produits, %d messages ont ete consomme\n",buffer->nbMessProd,buffer->nbMessCons);
 	exit(0);
 }
