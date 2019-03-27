@@ -99,6 +99,7 @@ PRIVATE void swap_clear(struct pte *pg)
  * 
  * @returns Zero upon success, and non-zero otherwise.
  */
+
 PRIVATE int swap_out(struct process *proc, addr_t addr)
 {
 	unsigned blk;   /* Block number in swap device.  */
@@ -148,7 +149,6 @@ error1:
 error0:
 	return (-1);
 }
-
 /**
  * @brief Swaps a page in to disk.
  * 
@@ -301,10 +301,6 @@ PRIVATE int allocf(void)
 	oldest = -1;
 	for (i = 0; i < NR_FRAMES; i++)
 	{
-		/* Found it. */
-		if (frames[i].count == 0)
-			goto found;
-		//a
 		/* Local page replacement policy. */
 		if (frames[i].owner == curr_proc->pid)
 		{
@@ -321,17 +317,13 @@ PRIVATE int allocf(void)
 	/* No frame left. */
 	if (oldest < 0)
 		return (-1);
-	
-	/* Swap page out. */
-	if (swap_out(curr_proc, frames[i = oldest].addr))
-		return (-1);
-	
-found:		
 
-	frames[i].age = ticks;
-	frames[i].count = 1;
-	
-	return (i);
+	if(swap_out(curr_proc, frames[oldest].addr))
+		return (-1);
+
+	frames[oldest].age = ticks;
+	frames[oldest].count = 1;
+	return (oldest);
 }
 
 /**
