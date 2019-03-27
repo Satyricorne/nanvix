@@ -326,17 +326,17 @@ PRIVATE int allocf(void)
 	
 	/* Swap page out. */
 
-	if (swap_out(curr_proc, frames[nfu].addr))
+	if (swap_out(curr_proc, frames[i=nfu].addr))
 		return (-1);
 	
 
 found:
 
-	frames[nfu].age = ticks;
-	frames[nfu].count = 1;
-	frames[nfu].use = 0;
+	frames[i].age = ticks;
+	frames[i].count = 1;
+	frames[i].use = 0;
 	
-	return (nfu);
+	return (i);
 
 }
 
