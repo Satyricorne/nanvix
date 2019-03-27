@@ -313,7 +313,7 @@ PRIVATE int allocf(void)
 			 * on peut utiliser cette frame
 			 * OU si la frame est libre on peut l'utiliser directement
 			 */
-			if ((frames[aiguille].count == 0) || ((frames[aiguille].count == 1) && (frames[aiguille].age > TIME_SWAP)))
+			if ((frames[aiguille].count == 0) || ((frames[aiguille].count == 1) && (ticks-frames[aiguille].age > TIME_SWAP)))
 				goto found;
 		}
 
