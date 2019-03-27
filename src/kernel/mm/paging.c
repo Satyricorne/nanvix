@@ -294,50 +294,42 @@ PRIVATE struct
  */
 PRIVATE int allocf(void)
 {
-	int i;      /* Loop index.  */
-	int nfu; /* Oldest page. */
-	
-	#define NFU(x, y) (frames[x].use < frames[y].use)
+	#define OLDEST(x, y) (frames[x].age < frames[y].age)
 	
 	/* Search for a free frame. */
-	nfu = -1;
-	for (i = 0; i < NR_FRAMES; i++)
+	while(1)
 	{
-		/* Found it. */
-		if (frames[i].count == 0)
-			goto found;
-
 		/* Local page replacement policy. */
-		if (frames[i].owner == curr_proc->pid)
+		if (frames[aiguille].owner == curr_proc->pid)
 		{
 			/* Skip shared pages. */
-			if (frames[i].count > 1)
+			if (frames[aiguille].count > 1)
 				continue;
-			
-			/* Oldest page found. */
-			if ((nfu < 0) || (NFU(i, nfu)))
-				nfu = i;
+
+			/* Si la frame est occupé Mais depuis un trop long moment 
+			 * on peut utiliser cette frame
+			 * OU si la frame est libre on peut l'utiliser directement
+			 */
+			if ((frames[aiguille].count == 0) || ((frames[aiguille].count == 1) && (frames[aiguille].age > TIME_SWAP)))
+				goto found;
 		}
+
+		/* Si on a pas la frame au niveau de l'aiguille n'est pas disponible 
+		 * on incremente l'aiguille pour passer a la frame suivante
+		 * si l'aiguille arrive au nombre de frame on la remet a 0
+		 */ 
+		if (aiguille >= NR_FRAMES)
+			aiguille = 0;
+		else aiguille++;
 	}
-	
-	/* No frame left. */
-	if (nfu < 0)
+
+	if(swap_out(curr_proc, frames[aiguille].addr))
 		return (-1);
-	
-	/* Swap page out. */
 
-	if (swap_out(curr_proc, frames[nfu].addr))
-		return (-1);
-	
-
-found:
-
-	frames[nfu].age = ticks;
-	frames[nfu].count = 1;
-	frames[nfu].use = 0;
-	
-	return (nfu);
-
+	found: 
+		frames[aiguille].age = ticks;
+		frames[aiguille].count = 1;
+		return (aiguille);
 }
 
 /**
