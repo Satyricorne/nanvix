@@ -278,11 +278,12 @@ PUBLIC void putkpg(void *kpg)
  */
 PRIVATE struct
 {
+	int use;
 	unsigned count; /**< Reference count.     */
 	unsigned age;   /**< Age.                 */
 	pid_t owner;    /**< Page owner.          */
 	addr_t addr;    /**< Address of the page. */
-} frames[NR_FRAMES] = {{0, 0, 0, 0},  };
+} frames[NR_FRAMES] = {{0, 0, 0, 0, 0},  };
 
 /**
  * @brief Allocates a page frame.
@@ -295,7 +296,7 @@ PRIVATE int allocf(void)
 	int i;      /* Loop index.  */	
 	int oldest; /* Oldest page. */
 	
-	#define OLDEST(x, y) (frames[x].age < frames[y].age)
+	#define OLDEST(x, y) (frames[x].use < frames[y].use)
 	
 	/* Search for a free frame. */
 	oldest = -1;
@@ -422,6 +423,8 @@ PRIVATE int readpg(struct region *reg, addr_t addr)
 	off = reg->file.off + (PG(addr) << PAGE_SHIFT);
 	inode = reg->file.inode;
 	p = (char *)(addr & PAGE_MASK);
+	struct pte *PTE = getpte(curr_proc,p);
+	frames[PTE->frame].use = ticks;
 	count = file_read(inode, p, PAGE_SIZE, off);
 	
 	/* Failed to read page. */
