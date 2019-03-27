@@ -284,6 +284,9 @@ PRIVATE struct
 	addr_t addr;    /**< Address of the page. */
 } frames[NR_FRAMES] = {{0, 0, 0, 0},  };
 
+
+int aiguille = 0;
+#define TIME_SWAP 2000
 /**
  * @brief Allocates a page frame.
  * 
@@ -291,39 +294,43 @@ PRIVATE struct
  *          negative number is returned instead.
  */
 PRIVATE int allocf(void)
-{
-	int i;      /* Loop index.  */
-	int oldest; /* Oldest page. */
-	
+{	
 	#define OLDEST(x, y) (frames[x].age < frames[y].age)
 	
 	/* Search for a free frame. */
-	oldest = -1;
-	for (i = 0; i < NR_FRAMES; i++)
+	while(1)
 	{
 		/* Local page replacement policy. */
-		if (frames[i].owner == curr_proc->pid)
+		if (frames[aiguille].owner == curr_proc->pid)
 		{
 			/* Skip shared pages. */
-			if (frames[i].count > 1)
+			if (frames[aiguille].count > 1)
 				continue;
-			
-			/* Oldest page found. */
-			if ((oldest < 0) || (OLDEST(i, oldest)))
-				oldest = i;
+
+			/* Si la frame est occupé Mais depuis un trop long moment 
+			 * on peut utiliser cette frame
+			 * OU si la frame est libre on peut l'utiliser directement
+			 */
+			if ((frames[aiguille].count == 0) || ((frames[aiguille].count == 1) && (frames[aiguille].age > TIME_SWAP)))
+				goto found;
 		}
+
+		/* Si on a pas la frame au niveau de l'aiguille n'est pas disponible 
+		 * on incremente l'aiguille pour passer a la frame suivante
+		 * si l'aiguille arrive au nombre de frame on la remet a 0
+		 */ 
+		if (aiguille >= NR_FRAMES)
+			aiguille = 0;
+		else aiguille++;
 	}
-	
-	/* No frame left. */
-	if (oldest < 0)
+
+	if(swap_out(curr_proc, frames[aiguille].addr))
 		return (-1);
 
-	if(swap_out(curr_proc, frames[oldest].addr))
-		return (-1);
-
-	frames[oldest].age = ticks;
-	frames[oldest].count = 1;
-	return (oldest);
+	found: 
+		frames[aiguille].age = ticks;
+		frames[aiguille].count = 1;
+		return (aiguille);
 }
 
 /**
