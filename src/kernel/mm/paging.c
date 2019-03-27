@@ -301,6 +301,10 @@ PRIVATE int allocf(void)
 	oldest = -1;
 	for (i = 0; i < NR_FRAMES; i++)
 	{
+		/* Found it. */
+		if (frames[i].count == 0)
+			goto found;
+
 		/* Local page replacement policy. */
 		if (frames[i].owner == curr_proc->pid)
 		{
@@ -318,12 +322,12 @@ PRIVATE int allocf(void)
 	if (oldest < 0)
 		return (-1);
 
-	if(swap_out(curr_proc, frames[oldest].addr))
+	if(swap_out(curr_proc, frames[i=oldest].addr))
 		return (-1);
-
-	frames[oldest].age = ticks;
-	frames[oldest].count = 1;
-	return (oldest);
+found:
+	frames[i].age = ticks;
+	frames[i].count = 1;
+	return (i);
 }
 
 /**
