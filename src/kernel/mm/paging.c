@@ -285,6 +285,7 @@ PRIVATE struct
 	addr_t addr;    /**< Address of the page. */
 } frames[NR_FRAMES] = {{0, 0, 0, 0},  };
 
+// The 4 different classes of frames
 int class0[NR_FRAMES];
 int class1[NR_FRAMES];
 int class2[NR_FRAMES];
@@ -336,9 +337,9 @@ PRIVATE int allocf(void)
 		}
 	}
 	int r;
-	// int index; // Numéro de la page choisi
 	// Priorité : classe1 > classe2 > classe3 > classe4
 
+	// Si il y a des pages de classes 1
 	if(c0 > 0){
 		r = krand()%c0;
 		i = class0[r];
@@ -351,17 +352,18 @@ PRIVATE int allocf(void)
 	}else if (c3 > 0){
 		r = krand()%c3;
 		i = class3[r];
-	}else{
+	}else{ // S'il n'y avait pas de page séléctionné, on renvoit une erreur
 		return -1;
 	}
-
+	
+	// On enleve la page du disk
 	if (swap_out(curr_proc, frames[i].addr))
 			return (-1);
 
 found:
 	frames[i].age=ticks;
 	frames[i].count=1;
-	return i;
+	return i; // on retourne le numero de la page
 
 }
 
