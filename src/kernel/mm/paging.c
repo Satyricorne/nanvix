@@ -304,7 +304,7 @@ PRIVATE int allocf(void)
 		/* Found it. */
 		if (frames[i].count == 0)
 			goto found;
-		
+		//a
 		/* Local page replacement policy. */
 		if (frames[i].owner == curr_proc->pid)
 		{
