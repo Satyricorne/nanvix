@@ -278,7 +278,7 @@ PUBLIC void putkpg(void *kpg)
  */
 PRIVATE struct
 {
-	int secondChance;
+	int secondChance; /**< indique si on a une seconde chance     */
 	unsigned count; /**< Reference count.     */
 	unsigned age;   /**< Age.                 */
 	pid_t owner;    /**< Page owner.          */
@@ -339,6 +339,7 @@ PRIVATE int allocf(void){
 			} else {// Si c'etait deja sa 2eme chance
 			// on renvoit cette page la
 			frames[i].count = 1;
+			frames[i].secondChance = 0;
 			return (i);
 		}
 
