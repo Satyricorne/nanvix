@@ -279,7 +279,7 @@ PUBLIC void putkpg(void *kpg)
  */
 PRIVATE struct
 {
-	unsigned use;
+	unsigned use;	/**< Number of use     */
 	unsigned count; /**< Reference count.     */
 	unsigned age;   /**< Age.                 */
 	pid_t owner;    /**< Page owner.          */
@@ -297,6 +297,7 @@ PRIVATE int allocf(void)
 	int i;      /* Loop index.  */
 	int nfu; /* Oldest page. */
 	
+	// Determine which frame is used the least
 	#define NFU(x, y) (frames[x].use < frames[y].use)
 	
 	/* Search for a free frame. */
@@ -432,7 +433,9 @@ PRIVATE int readpg(struct region *reg, addr_t addr)
 	off = reg->file.off + (PG(addr) << PAGE_SHIFT);
 	inode = reg->file.inode;
 	p = (char *)(addr & PAGE_MASK);
+	// We get a pointer to the page
 	struct pte *PTE = getpte(curr_proc,p);
+	// We increment the number of use
 	frames[PTE->frame].use++;
 	count = file_read(inode, p, PAGE_SIZE, off);
 	
