@@ -318,33 +318,32 @@ PRIVATE int allocf(void){
 			}
 		}
 
-	/* No frame left. */
+		/* No frame left. */
 		if (oldest < 0)
 			return (-1);
 
-	/* Swap page out. */
-	// Si c'est la premiere fois qu'on tombe sur la page
+		/* Swap page out. */
+		// Si c'est la premiere fois qu'on tombe sur la page
 
 		if (swap_out(curr_proc, frames[i=oldest].addr))
 			return (-1);
 
-found:	
-	// on a trouvé la page la plus vieille
-	// Si elle n'a jamais été choisie
-		if(!frames[i].secondChance){
-		// on dis que c'est ça 2eme chance
-			frames[i].secondChance = 1;
-			// swap_in(i,frames[i].addr);
-			
-		}else{// Si c'etait deja sa 2eme chance
-		// on renvoit cette page la
-		frames[i].age = ticks;
-		frames[i].count = 1;
-		return (i);
-	}
+		found:	
+			// on a trouvé la page la plus vieille
+			// Si elle n'a jamais été choisie
+			frames[i].age = ticks;
+			if(!frames[i].secondChance){
+				// on dis que c'est ça 2eme chance
+				frames[i].secondChance = 1;
 
-}
-return -1;
+			} else {// Si c'etait deja sa 2eme chance
+			// on renvoit cette page la
+			frames[i].count = 1;
+			return (i);
+		}
+
+	}
+	return -1;
 
 }
 
