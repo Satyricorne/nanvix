@@ -91,6 +91,7 @@ PRIVATE void swap_clear(struct pte *pg)
 	}
 }
 
+
 /**
  * @brief Swaps a page out to disk.
  * 
@@ -99,55 +100,55 @@ PRIVATE void swap_clear(struct pte *pg)
  * 
  * @returns Zero upon success, and non-zero otherwise.
  */
-// PRIVATE int swap_out(struct process *proc, addr_t addr)
-// {
-// 	unsigned blk;   /* Block number in swap device.  */
-// 	struct pte *pg; /* Page table entry.             */
-// 	off_t off;      /* Offset in swap device.        */
-// 	ssize_t n;      /* # bytes written.              */
-// 	void *kpg;      /* Kernel page used for copying. */
+PRIVATE int swap_out(struct process *proc, addr_t addr)
+{
+	unsigned blk;   /* Block number in swap device.  */
+	struct pte *pg; /* Page table entry.             */
+	off_t off;      /* Offset in swap device.        */
+	ssize_t n;      /* # bytes written.              */
+	void *kpg;      /* Kernel page used for copying. */
 	
-// 	addr &= PAGE_MASK;
-// 	pg = getpte(proc, addr);
+	addr &= PAGE_MASK;
+	pg = getpte(proc, addr);
 	
-// 	/* Get kernel page. */
-// 	if ((kpg = getkpg(0)) == NULL)
-// 		goto error0;
+	/* Get kernel page. */
+	if ((kpg = getkpg(0)) == NULL)
+		goto error0;
 	
-// 	/* Get free block in swap device. */
-// 	blk = bitmap_first_free(swap.bitmap, (SWP_SIZE/PAGE_SIZE) >> 3);
-// 	if (blk == BITMAP_FULL)
-// 		goto error1;
+	/* Get free block in swap device. */
+	blk = bitmap_first_free(swap.bitmap, (SWP_SIZE/PAGE_SIZE) >> 3);
+	if (blk == BITMAP_FULL)
+		goto error1;
 	
-// 	/*
-// 	 * Set block on swap device as used
-// 	 * in advance, because we may sleep below.
-// 	 */
-// 	off = HDD_SIZE + blk*PAGE_SIZE;
-// 	bitmap_set(swap.bitmap, blk);
+	/*
+	 * Set block on swap device as used
+	 * in advance, because we may sleep below.
+	 */
+	off = HDD_SIZE + blk*PAGE_SIZE;
+	bitmap_set(swap.bitmap, blk);
 	
-// 	/* Write page to disk. */
-// 	kmemcpy(kpg, (void *)addr, PAGE_SIZE);
-// 	n = bdev_write(SWAP_DEV, (void *)addr, PAGE_SIZE, off);
-// 	if (n != PAGE_SIZE)
-// 		goto error2;
-// 	swap.count[blk]++;
+	/* Write page to disk. */
+	kmemcpy(kpg, (void *)addr, PAGE_SIZE);
+	n = bdev_write(SWAP_DEV, (void *)addr, PAGE_SIZE, off);
+	if (n != PAGE_SIZE)
+		goto error2;
+	swap.count[blk]++;
 	
-// 	/* Set page as non-present. */
-// 	pg->present = 0;
-// 	pg->frame = blk;
-// 	tlb_flush();
+	/* Set page as non-present. */
+	pg->present = 0;
+	pg->frame = blk;
+	tlb_flush();
 	
-// 	putkpg(kpg);
-// 	return (0);
+	putkpg(kpg);
+	return (0);
 
-// 	error2:
-// 	bitmap_clear(swap.bitmap, blk);
-// 	error1:
-// 	putkpg(kpg);
-// 	error0:
-// 	return (-1);
-// }
+	error2:
+	bitmap_clear(swap.bitmap, blk);
+	error1:
+	putkpg(kpg);
+	error0:
+	return (-1);
+}
 
 /**
  * @brief Swaps a page in to disk.
@@ -303,8 +304,8 @@ PRIVATE int allocf(void)
 	for (i = 0; i < NR_FRAMES; i++)
 	{
 		/* Found it. */
-		// if (frames[i].count == 0)
-		// 	goto found;
+		if (frames[i].count == 0)
+			goto found;
 
 		/* Local page replacement policy. */
 		if (frames[i].owner == curr_proc->pid)
@@ -325,10 +326,11 @@ PRIVATE int allocf(void)
 	
 	/* Swap page out. */
 
-	// if (swap_out(curr_proc, frames[i = oldest].addr))
-	// 	return (-1);
+	if (swap_out(curr_proc, frames[nfu].addr))
+		return (-1);
 	
 
+found:
 
 	frames[nfu].age = ticks;
 	frames[nfu].count = 1;
