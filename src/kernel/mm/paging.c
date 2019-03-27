@@ -292,7 +292,7 @@ PRIVATE struct
  */
 PRIVATE int allocf(void)
 {
-	int i;      /* Loop index.  */
+	int i;      /* Loop index.  */	
 	int oldest; /* Oldest page. */
 	
 	#define OLDEST(x, y) (frames[x].age < frames[y].age)
