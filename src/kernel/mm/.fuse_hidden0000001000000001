@@ -45,7 +45,7 @@
  * @returns The requested page directory entry.
  */
 #define getpde(p, a) \
-(&(p)->pgdir[PGTAB(a)])
+	(&(p)->pgdir[PGTAB(a)])
 
 /**
  * @brief Gets a page table entry of a process.
@@ -56,7 +56,7 @@
  * @returns The requested page table entry.
  */
 #define getpte(p, a) \
-(&((struct pte *)((getpde(p, a)->frame << PAGE_SHIFT) + KBASE_VIRT))[PG(a)])
+	(&((struct pte *)((getpde(p, a)->frame << PAGE_SHIFT) + KBASE_VIRT))[PG(a)])
 
 
 /*============================================================================*
@@ -99,55 +99,55 @@ PRIVATE void swap_clear(struct pte *pg)
  * 
  * @returns Zero upon success, and non-zero otherwise.
  */
-// PRIVATE int swap_out(struct process *proc, addr_t addr)
-// {
-// 	unsigned blk;   /* Block number in swap device.  */
-// 	struct pte *pg; /* Page table entry.             */
-// 	off_t off;      /* Offset in swap device.        */
-// 	ssize_t n;      /* # bytes written.              */
-// 	void *kpg;      /* Kernel page used for copying. */
+PRIVATE int swap_out(struct process *proc, addr_t addr)
+{
+	unsigned blk;   /* Block number in swap device.  */
+	struct pte *pg; /* Page table entry.             */
+	off_t off;      /* Offset in swap device.        */
+	ssize_t n;      /* # bytes written.              */
+	void *kpg;      /* Kernel page used for copying. */
 	
-// 	addr &= PAGE_MASK;
-// 	pg = getpte(proc, addr);
+	addr &= PAGE_MASK;
+	pg = getpte(proc, addr);
 	
-// 	/* Get kernel page. */
-// 	if ((kpg = getkpg(0)) == NULL)
-// 		goto error0;
+	/* Get kernel page. */
+	if ((kpg = getkpg(0)) == NULL)
+		goto error0;
 	
-// 	/* Get free block in swap device. */
-// 	blk = bitmap_first_free(swap.bitmap, (SWP_SIZE/PAGE_SIZE) >> 3);
-// 	if (blk == BITMAP_FULL)
-// 		goto error1;
+	/* Get free block in swap device. */
+	blk = bitmap_first_free(swap.bitmap, (SWP_SIZE/PAGE_SIZE) >> 3);
+	if (blk == BITMAP_FULL)
+		goto error1;
 	
-// 	/*
-// 	 * Set block on swap device as used
-// 	 * in advance, because we may sleep below.
-// 	 */
-// 	off = HDD_SIZE + blk*PAGE_SIZE;
-// 	bitmap_set(swap.bitmap, blk);
+	/*
+	 * Set block on swap device as used
+	 * in advance, because we may sleep below.
+	 */
+	off = HDD_SIZE + blk*PAGE_SIZE;
+	bitmap_set(swap.bitmap, blk);
 	
-// 	/* Write page to disk. */
-// 	kmemcpy(kpg, (void *)addr, PAGE_SIZE);
-// 	n = bdev_write(SWAP_DEV, (void *)addr, PAGE_SIZE, off);
-// 	if (n != PAGE_SIZE)
-// 		goto error2;
-// 	swap.count[blk]++;
+	/* Write page to disk. */
+	kmemcpy(kpg, (void *)addr, PAGE_SIZE);
+	n = bdev_write(SWAP_DEV, (void *)addr, PAGE_SIZE, off);
+	if (n != PAGE_SIZE)
+		goto error2;
+	swap.count[blk]++;
 	
-// 	/* Set page as non-present. */
-// 	pg->present = 0;
-// 	pg->frame = blk;
-// 	tlb_flush();
+	/* Set page as non-present. */
+	pg->present = 0;
+	pg->frame = blk;
+	tlb_flush();
 	
-// 	putkpg(kpg);
-// 	return (0);
+	putkpg(kpg);
+	return (0);
 
-// 	error2:
-// 	bitmap_clear(swap.bitmap, blk);
-// 	error1:
-// 	putkpg(kpg);
-// 	error0:
-// 	return (-1);
-// }
+error2:
+	bitmap_clear(swap.bitmap, blk);
+error1:
+	putkpg(kpg);
+error0:
+	return (-1);
+}
 
 /**
  * @brief Swaps a page in to disk.
@@ -191,13 +191,13 @@ PRIVATE int swap_in(unsigned frame, addr_t addr)
 	kmemcpy((void *)addr, kpg, PAGE_SIZE);
 	pg->accessed = 0;
 	pg->dirty = 0;
-
+		
 	putkpg(kpg);
 	return (0);
 
-	error1:
+error1:
 	putkpg(kpg);
-	error0:
+error0:
 	return (-1);
 }
 
@@ -234,7 +234,7 @@ PUBLIC void *getkpg(int clean)
 	
 	return (NULL);
 
-	found:
+found:
 
 	/* Set page as used. */
 	kpg = (void *)(KPOOL_VIRT + (i << PAGE_SHIFT));
@@ -278,12 +278,11 @@ PUBLIC void putkpg(void *kpg)
  */
 PRIVATE struct
 {
-	unsigned use;
 	unsigned count; /**< Reference count.     */
 	unsigned age;   /**< Age.                 */
 	pid_t owner;    /**< Page owner.          */
 	addr_t addr;    /**< Address of the page. */
-} frames[NR_FRAMES] = {{0, 0, 0, 0, 0},  };
+} frames[NR_FRAMES] = {{0, 0, 0, 0},  };
 
 /**
  * @brief Allocates a page frame.
@@ -294,18 +293,18 @@ PRIVATE struct
 PRIVATE int allocf(void)
 {
 	int i;      /* Loop index.  */
-	int nfu; /* Oldest page. */
+	int oldest; /* Oldest page. */
 	
-	#define NFU(x, y) (frames[x].use < frames[y].use)
+	#define OLDEST(x, y) (frames[x].age < frames[y].age)
 	
 	/* Search for a free frame. */
-	nfu = -1;
+	oldest = -1;
 	for (i = 0; i < NR_FRAMES; i++)
 	{
 		/* Found it. */
-		// if (frames[i].count == 0)
-		// 	goto found;
-
+		if (frames[i].count == 0)
+			goto found;
+		//a
 		/* Local page replacement policy. */
 		if (frames[i].owner == curr_proc->pid)
 		{
@@ -314,28 +313,25 @@ PRIVATE int allocf(void)
 				continue;
 			
 			/* Oldest page found. */
-			if ((nfu < 0) || (NFU(i, nfu)))
-				nfu = i;
+			if ((oldest < 0) || (OLDEST(i, oldest)))
+				oldest = i;
 		}
 	}
 	
 	/* No frame left. */
-	if (nfu < 0)
+	if (oldest < 0)
 		return (-1);
 	
 	/* Swap page out. */
-
-	// if (swap_out(curr_proc, frames[i = oldest].addr))
-	// 	return (-1);
+	if (swap_out(curr_proc, frames[i = oldest].addr))
+		return (-1);
 	
+found:		
 
-
-	frames[nfu].age = ticks;
-	frames[nfu].count = 1;
-	frames[nfu].use = 0;
+	frames[i].age = ticks;
+	frames[i].count = 1;
 	
-	return (nfu);
-
+	return (i);
 }
 
 /**
@@ -430,8 +426,6 @@ PRIVATE int readpg(struct region *reg, addr_t addr)
 	off = reg->file.off + (PG(addr) << PAGE_SHIFT);
 	inode = reg->file.inode;
 	p = (char *)(addr & PAGE_MASK);
-	struct pte *PTE = getpte(curr_proc,p);
-	frames[PTE->frame].use++;
 	count = file_read(inode, p, PAGE_SIZE, off);
 	
 	/* Failed to read page. */
@@ -518,9 +512,9 @@ PUBLIC void freeupg(struct pte *pg)
 		kmemset(pg, 0, sizeof(struct pte));
 		return;
 	}
-
+		
 	i = pg->frame - (UBASE_PHYS >> PAGE_SHIFT);
-
+		
 	/* Double free. */
 	if (frames[i].count == 0)
 		kpanic("freeing user page twice");
@@ -549,15 +543,15 @@ PUBLIC void markpg(struct pte *pg, int mark)
 	{
 		/* Demand fill. */
 		case PAGE_FILL:
-		pg->fill = 1;
-		pg->zero = 0;
-		break;
+			pg->fill = 1;
+			pg->zero = 0;
+			break;
 		
 		/* Demand zero. */
 		case PAGE_ZERO:
-		pg->fill = 0;
-		pg->zero = 1;
-		break;
+			pg->fill = 0;
+			pg->zero = 1;
+			break;
 	}
 }
 
@@ -580,7 +574,7 @@ PUBLIC void linkupg(struct pte *upg1, struct pte *upg2)
 			upg1->writable = 0;
 			upg1->cow = 1;
 		}
-
+	
 		i = upg1->frame - (UBASE_PHYS >> PAGE_SHIFT);
 		frames[i].count++;
 	}
@@ -588,8 +582,8 @@ PUBLIC void linkupg(struct pte *upg1, struct pte *upg2)
 	/* In-disk page. */
 	else
 	{
-		i = upg1->frame;
-		swap.count[i]++;
+		 i = upg1->frame;
+		 swap.count[i]++;
 	}
 	
 	kmemcpy(upg2, upg1, sizeof(struct pte));
@@ -643,9 +637,9 @@ PUBLIC int crtpgdir(struct process *proc)
 	
 	return (0);
 
-	err1:
+err1:
 	putkpg(pgdir);
-	err0:
+err0:
 	return (-1);
 }
 
@@ -690,7 +684,7 @@ PUBLIC int vfault(addr_t addr)
 		/* Not a stack region. */
 		if (preg != STACK(curr_proc))
 			goto error1;
-
+	
 		kprintf("growing stack");
 		
 		/* Expand region. */
@@ -699,9 +693,9 @@ PUBLIC int vfault(addr_t addr)
 	}
 
 	pg = (reg->flags & REGION_DOWNWARDS) ?
-	&reg->pgtab[REGION_PGTABS-(PGTAB(preg->start)-PGTAB(addr))-1][PG(addr)]: 
-	&reg->pgtab[PGTAB(addr) - PGTAB(preg->start)][PG(addr)];
-
+		&reg->pgtab[REGION_PGTABS-(PGTAB(preg->start)-PGTAB(addr))-1][PG(addr)]: 
+		&reg->pgtab[PGTAB(addr) - PGTAB(preg->start)][PG(addr)];
+		
 	/* Clear page. */
 	if (pg->zero)
 	{
@@ -709,7 +703,7 @@ PUBLIC int vfault(addr_t addr)
 			goto error1;
 		kmemset((void *)(addr & PAGE_MASK), 0, PAGE_SIZE);
 	}
-
+		
 	/* Load page from executable file. */
 	else if (pg->fill)
 	{
@@ -717,7 +711,7 @@ PUBLIC int vfault(addr_t addr)
 		if (readpg(reg, addr))
 			goto error1;
 	}
-
+		
 	/* Swap page in. */
 	else
 	{
@@ -731,11 +725,11 @@ PUBLIC int vfault(addr_t addr)
 	unlockreg(reg);
 	return (0);
 
-	error2:
+error2:
 	frames[frame].count = 0;
-	error1:
+error1:
 	unlockreg(reg);
-	error0:
+error0:
 	return (-1);
 }
 /**
@@ -763,13 +757,13 @@ PUBLIC int pfault(addr_t addr)
 	lockreg(reg = preg->reg);
 
 	pg = (reg->flags & REGION_DOWNWARDS) ?
-	&reg->pgtab[REGION_PGTABS-(PGTAB(preg->start)-PGTAB(addr))-1][PG(addr)]: 
-	&reg->pgtab[PGTAB(addr) - PGTAB(preg->start)][PG(addr)];
+		&reg->pgtab[REGION_PGTABS-(PGTAB(preg->start)-PGTAB(addr))-1][PG(addr)]: 
+		&reg->pgtab[PGTAB(addr) - PGTAB(preg->start)][PG(addr)];
 
 	/* Copy on write not enabled. */
 	if (!pg->cow)
 		goto error1;
-
+		
 	i = pg->frame - (UBASE_PHYS >> PAGE_SHIFT);
 
 	/* Duplicate page. */
@@ -785,7 +779,7 @@ PUBLIC int pfault(addr_t addr)
 		frames[i].count--;
 		kmemcpy(pg, &new_pg, sizeof(struct pte));
 	}
-
+		
 	/* Steal page. */
 	else
 	{
@@ -796,8 +790,8 @@ PUBLIC int pfault(addr_t addr)
 	unlockreg(reg);
 	return(0);
 
-	error1:
+error1:
 	unlockreg(reg);
-	error0:
+error0:
 	return (-1);
 }
