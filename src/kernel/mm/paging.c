@@ -434,9 +434,8 @@ PRIVATE int readpg(struct region *reg, addr_t addr)
 	inode = reg->file.inode;
 	p = (char *)(addr & PAGE_MASK);
 	// We get a pointer to the page
-	struct pte *PTE = getpte(curr_proc,p);
 	// We increment the number of use
-	frames[PTE->frame].useNbr+=1;
+	// frames[pg->frame].useNbr+=1;
 	count = file_read(inode, p, PAGE_SIZE, off);
 	
 	/* Failed to read page. */
