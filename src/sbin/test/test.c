@@ -28,7 +28,6 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
-#include <times.h>
 
 /* Test flags. */
 #define EXTENDED (1 << 0)
@@ -107,7 +106,7 @@ static int swap_test(void)
 	t1 = times(&timing);
 	
 	/* Print timing statistics. */
-	// if (flags & VERBOSE)
+	if (flags & VERBOSE)
 		printf("  Elapsed: %d\n", t1 - t0);
 	
 	return (0);
