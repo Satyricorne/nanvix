@@ -340,6 +340,7 @@ found:
 		// on renvoit cette page la
 		frames[i].age = ticks;
 		frames[i].count = 1;
+		frames[i].secondChance = 0;
 		return (i);
 	}
 
