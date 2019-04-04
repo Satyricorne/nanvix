@@ -329,7 +329,7 @@ PRIVATE int allocf(void)
 found:
 	frames[i].age = ticks;
 	frames[i].count = 1;
-	framse[i].timeOfLastUse = age;
+	framse[i].timeOfLastUse = frames[i].age;
 	return (i);
 }
 
