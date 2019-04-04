@@ -278,7 +278,7 @@ PUBLIC void putkpg(void *kpg)
  */
 PRIVATE struct
 {
-	int secondChance;
+	int secondChance; /**< indique si on a une seconde chance     */
 	unsigned count; /**< Reference count.     */
 	unsigned age;   /**< Age.                 */
 	pid_t owner;    /**< Page owner.          */
@@ -318,17 +318,18 @@ PRIVATE int allocf(void){
 			}
 		}
 
-	/* No frame left. */
+		/* No frame left. */
 		if (oldest < 0)
 			return (-1);
 
-	/* Swap page out. */
-	// Si c'est la premiere fois qu'on tombe sur la page
+		/* Swap page out. */
+		// Si c'est la premiere fois qu'on tombe sur la page
 
 		if (swap_out(curr_proc, frames[i=oldest].addr))
 			return (-1);
 
-found:	
+
+		found:	
 	// on a trouvé la page la plus vieille
 	// Si elle n'a jamais été choisie
 		if(!frames[i].secondChance){
@@ -337,12 +338,13 @@ found:
 			// swap_in(i,frames[i].addr);
 			
 		}else{// Si c'etait deja sa 2eme chance
-		// on renvoit cette page la
+			// on renvoit cette page la
 		frames[i].age = ticks;
 		frames[i].count = 1;
 		frames[i].secondChance = 0;
 		return (i);
-	}
+	}	
+
 
 }
 return -1;
